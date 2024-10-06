@@ -1,0 +1,149 @@
+using GeometryLibrary;
+using System;
+
+namespace GeometryLibrary
+{
+    public interface IShape
+    {
+        double CalculateArea();
+    }
+
+    public class Circle : IShape
+    {
+        public double Radius { get; }
+
+        public Circle(double radius)
+        {
+            if (radius < 0) throw new ArgumentException("Радиус не может быть отрицательным.");
+            Radius = radius;
+        }
+
+        public double CalculateArea()
+        {
+            return Math.PI * Math.Pow(Radius, 2);
+        }
+    }
+
+
+    public class Triangle : IShape
+    {
+        public double SideA { get; }
+        public double SideB { get; }
+        public double SideC { get; }
+
+        public Triangle(double sideA, double sideB, double sideC)
+        {
+            if (sideA <= 0 || sideB <= 0 || sideC <= 0)
+                throw new ArgumentException("Стороны должны быть положительными.");
+            if (sideA + sideB <= sideC || sideA + sideC <= sideB || sideB + sideC <= sideA)
+                throw new ArgumentException("Невозможно создать треугольник с такими сторонами.");
+
+            SideA = sideA;
+            SideB = sideB;
+            SideC = sideC;
+        }
+
+        public double CalculateArea()
+        {
+            double s = (SideA + SideB + SideC) / 2;
+            return Math.Sqrt(s * (s - SideA) * (s - SideB) * (s - SideC));
+        }
+
+        public bool IsRightAngled()
+        {
+
+            var sides = new[] { SideA, SideB, SideC };
+            Array.Sort(sides);
+            return Math.Abs(Math.Pow(sides[0], 2) + Math.Pow(sides[1], 2) - Math.Pow(sides[2], 2)) < 0;
+        }
+    }
+}
+
+
+namespace GeometryApp
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            Console.WriteLine("Выберите фигуру для вычисления площади:");
+            Console.WriteLine("1. Круг");
+            Console.WriteLine("2. Треугольник");
+            Console.WriteLine("0. Выход");
+
+            while (true)
+            {
+                Console.Write("Введите номер: ");
+                string input = Console.ReadLine();
+
+                if (input == "1")
+                {
+                    CalculateCircleArea();
+                }
+                else if (input == "2")
+                {
+                    CalculateTriangleArea();
+                }
+                else if (input == "0")
+                {
+                    break;
+                }
+                else
+                {
+                    Console.WriteLine("Неверный ввод. Пожалуйста, попробуйте еще раз.");
+                }
+            }
+        }
+
+        static void CalculateCircleArea()
+        {
+            Console.Write("Введите радиус круга: ");
+            if (double.TryParse(Console.ReadLine(), out double radius))
+            {
+                try
+                {
+                    var circle = new Circle(radius);
+                    double area = circle.CalculateArea();
+                    Console.WriteLine($"Площадь круга: {area:F2}");
+                }
+                catch (ArgumentException ex)
+                {
+                    Console.WriteLine($"Ошибка: {ex.Message}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("Ошибка: введите допустимое число.");
+            }
+        }
+
+        static void CalculateTriangleArea()
+        {
+            Console.Write("Введите длины сторон треугольника через пробел: ");
+            string[] sides = Console.ReadLine().Split(' ');
+
+            if (sides.Length == 3 &&
+                double.TryParse(sides[0], out double sideA) &&
+                double.TryParse(sides[1], out double sideB) &&
+                double.TryParse(sides[2], out double sideC))
+            {
+                try
+                {
+                    var triangle = new Triangle(sideA, sideB, sideC);
+                    double area = triangle.CalculateArea();
+                    bool isRightAngled = triangle.IsRightAngled();
+                    Console.WriteLine($"Площадь треугольника: {area:F2}");
+                    Console.WriteLine($"Является ли треугольник прямоугольным? {(isRightAngled ? "Да" : "Нет")}");
+                }
+                catch (ArgumentException ex)
+                {
+                    Console.WriteLine($"Ошибка: {ex.Message}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("Ошибка: введите три допустимых числа.");
+            }
+        }
+    }
+}
